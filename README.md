@@ -8,7 +8,7 @@ The main program is implemented in Matlab, pipelineSVMFE.m. For a given set of i
 
 Inputs:
 
-• positive sequences, a set of DNA sequences (χi) given in fasta format
+• positive sequences, a set of DNA sequences given in fasta format
 
 • r cutoff, a threshold value to filter out weak feature enrichments, 0.005 (default)
 

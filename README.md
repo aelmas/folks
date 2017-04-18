@@ -1,7 +1,6 @@
 # folks
 The folded k-spectrum kernel: a machine learning approach to detecting transcription factor binding sites with gapped nucleotide dependencies
 
-(Please see the file "Readme.pdf" for more detail)
 
 MAIN PROGRAM
 
@@ -18,3 +17,6 @@ Outputs:
 • features final, a set of enriched gapped k-mer features 
 
 • ri final, the corresponding enrichment scores, ri
+
+
+(Please see the file "Readme.pdf" for more detail.)

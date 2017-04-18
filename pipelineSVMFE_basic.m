@@ -9,8 +9,8 @@ positive_sequences = fastaread('true_positive_set_Stringham13flanking.fasta');
 % positive_sequences = fastaread('toydata.fasta');
 % -------------------------------------------------------------------------
 % 0. generate training data (x_i^p)
-% D = mappingFoldedKspec(backgroundseq,binarySpace(6)); %background frequencies of gapped kmers 
-load D_dmel_genomeAll_gapped6mers %background frequencies of gapped kmers in Dmel genome
+% D = mappingFoldedKspec(backgroundseq,binarySpace(6)); %background frequencies of gapped k-mers 
+load D_dmel_genomeAll_gapped6mers %background frequencies of gapped k-mers in Dmel genome
 xip = mappingFunction(upper(positive_sequences),D);
 % -------------------------------------------------------------------------
 % 1. generate negative training data (x_j^n)
@@ -116,50 +116,50 @@ pipelineSVMCVfolded
 
 n_CVtests = 100;
 minFNrate = .1;
-nmersFNidx0 = nmersFNidx;
-nmersFNidx = [];
-for i = uniondata(nmersFNidx0)
-    if length(find(nmersFNidx0==i)) > minFNrate * n_CVtests
-        nmersFNidx = [nmersFNidx nmersFNidx0(nmersFNidx0==i)];
+kmersFNidx0 = kmersFNidx;
+kmersFNidx = [];
+for i = uniondata(kmersFNidx0)
+    if length(find(kmersFNidx0==i)) > minFNrate * n_CVtests
+        kmersFNidx = [kmersFNidx kmersFNidx0(kmersFNidx0==i)];
     end
 end
-gappednmersFNidx0 = gappednmersFNidx;
-gappednmersFNidx = [];
-for i = uniondata(gappednmersFNidx0)
-    if length(find(gappednmersFNidx0==i)) > minFNrate * n_CVtests
-        gappednmersFNidx = [gappednmersFNidx gappednmersFNidx0(gappednmersFNidx0==i)];
+gappedkmersFNidx0 = gappedkmersFNidx;
+gappedkmersFNidx = [];
+for i = uniondata(gappedkmersFNidx0)
+    if length(find(gappedkmersFNidx0==i)) > minFNrate * n_CVtests
+        gappedkmersFNidx = [gappedkmersFNidx gappedkmersFNidx0(gappedkmersFNidx0==i)];
     end
 end
 
 controlSize = size(negative_sequences,1);
 signalSize = size(positive_sequences,1);
-Group1_CRMs = setdiff(nmersFNidx,gappednmersFNidx)-controlSize
-Group2_CRMs = intersect(nmersFNidx,gappednmersFNidx)-controlSize %CRMs both-missed
-Group3_CRMs = setdiff(gappednmersFNidx,nmersFNidx)-controlSize
+Group1_CRMs = setdiff(kmersFNidx,gappedkmersFNidx)-controlSize
+Group2_CRMs = intersect(kmersFNidx,gappedkmersFNidx)-controlSize %CRMs both-missed
+Group3_CRMs = setdiff(gappedkmersFNidx,kmersFNidx)-controlSize
 Group4_CRMs = setdiff(1:signalSize,[Group1_CRMs Group2_CRMs Group3_CRMs]);
 CRM_indices = [Group1_CRMs Group2_CRMs Group3_CRMs Group4_CRMs]; %restCRMs
 
 xS = 1;
-nmerfncount = zeros(1,length(CRM_indices));
-gappednmerfncount = zeros(1,length(CRM_indices));
+kmerfncount = zeros(1,length(CRM_indices));
+gappedkmerfncount = zeros(1,length(CRM_indices));
 for j = 1:length(CRM_indices)
     range = (j-1)*xS+1:j*xS;
-    for i = 1:length(nmersFNidx)
-        if range(1) <= nmersFNidx(i)-controlSize && nmersFNidx(i)-controlSize <= range(end)
-            nmerfncount(j) = nmerfncount(j) + 1;
+    for i = 1:length(kmersFNidx)
+        if range(1) <= kmersFNidx(i)-controlSize && kmersFNidx(i)-controlSize <= range(end)
+            kmerfncount(j) = kmerfncount(j) + 1;
         end
     end
-    for i = 1:length(gappednmersFNidx)
-        if range(1) <= gappednmersFNidx(i)-controlSize && gappednmersFNidx(i)-controlSize <= range(end)
-            gappednmerfncount(j) = gappednmerfncount(j) + 1;
+    for i = 1:length(gappedkmersFNidx)
+        if range(1) <= gappedkmersFNidx(i)-controlSize && gappedkmersFNidx(i)-controlSize <= range(end)
+            gappedkmerfncount(j) = gappedkmerfncount(j) + 1;
         end
     end
 end
-nmerfncount = nmerfncount/xS;
-gappednmerfncount = gappednmerfncount/xS;
+kmerfncount = kmerfncount/xS;
+gappedkmerfncount = gappedkmerfncount/xS;
 
-    figure; bar([nmerfncount' gappednmerfncount'])
-    box off; axis([1 length(nmerfncount)+1 0 n_CVtests]); grid on;
+    figure; bar([kmerfncount' gappedkmerfncount'])
+    box off; axis([1 length(kmerfncount)+1 0 n_CVtests]); grid on;
     xlabel('CRM ID'); ylabel('FN call rates');
     legend('6-spectrum kernel (FE)','Folded 6-spectrum kernel (FE)',...
         'Location','northoutside','Orientation','horizontal'); legend('boxoff')
@@ -172,7 +172,7 @@ gappednmerfncount = gappednmerfncount/xS;
     
 enriched_features = cell(1,length(CRM_indices));
 enriched_features_weights = cell(1,length(CRM_indices));
-enriched_gapped_nmers = cell(1,length(CRM_indices));
+enriched_gapped_kmers = cell(1,length(CRM_indices));
 maxFeaturesInCRM = 0;
 for c = 1:length(CRM_indices);
     c
@@ -189,9 +189,9 @@ for c = 1:length(CRM_indices);
         maxFeaturesInCRM = length(enriched_features_weights{c});
     end
     for mdl = enriched_features{c}'
-        gapped_nmer = repmat('m',1,length(mdl));
-        gapped_nmer(upper(mdl)=='g') = 'g';
-        enriched_gapped_nmers{c} = [enriched_gapped_nmers{c}; gapped_nmer];
+        gapped_kmer = repmat('a',1,length(mdl));
+        gapped_kmer(upper(mdl)=='N') = 'N';
+        enriched_gapped_kmers{c} = [enriched_gapped_kmers{c}; gapped_kmer];
     end
 end
 all_enriched_features = [];

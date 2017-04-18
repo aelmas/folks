@@ -18,7 +18,7 @@ F = [xjn; xip];
 % ------------------------------------------------------------
 tic;
 repeatAUC = [];
-gappednmersFNidx = [];
+gappedkmersFNidx = [];
 FPRs = []; TPRs = [];
 for repeatCV = 1:n_CVtests
     repeatCV
@@ -53,7 +53,7 @@ for repeatCV = 1:n_CVtests
     for i = 1:size(trueClasses,1)
         if isequal(trueClasses{i},posclass)
             if isequal(predictedClasses(i),0)
-                gappednmersFNidx = [gappednmersFNidx CVidx(i)];
+                gappedkmersFNidx = [gappedkmersFNidx CVidx(i)];
             end
         end
     end

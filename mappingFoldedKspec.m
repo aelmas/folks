@@ -6,29 +6,29 @@ function D = mappingFoldedKspec(S,M,verbose)
 %   S, a character string representing a DNA sequence, or is the path to
 %     the fasta file containing a DNA sequence.
 %
-%   M, a matrix where each row represents a gapped n-mer model.
+%   M, a matrix where each row represents a gapped k-mer model.
 %   Example
 %     [1 1 1] represents all 3-mers ['AAA','AAC',...,'ACA','ACC',...,'TTT']
 %     [1 0 1] represents the gapped 3-mers where the 2nd nucleotide
-%       is ignored ['AgA','AgC',...,'CgA','CgC',...,'TgT']
+%       is ignored ['ANA','ANC',...,'CNA','CNC',...,'TNT']
 %     Note: [1 0 1] have the same number of elements with 2-mers.
 %
 %   verbose, logical value for displaying the progress. default is false.
 %
-%   D, struct array. Each row contains the corresponding (gapped) n-mer
+%   D, struct array. Each row contains the corresponding (gapped) k-mer
 %     distributions.
 %
 %   Example
 %     S = 'AAATGAATTGC'
 %     M = [0 1; 1 1]
-%     % M = binarySpace(n-1); M = [M true(size(M,1),1)]; %all gapped n-mers
+%     % M = binarySpace(n-1); M = [M true(size(M,1),1)]; %all gapped k-mers
 %     D = mappingFoldedKspec(S,M)
 %       D(1) returns the mononucleotide distributions due to [0 1] of M
 %           distribution    model
-%                   4/10     'gA'
-%                   1/10     'gC'
-%                   2/10     'gG'
-%                   3/10     'gT'
+%                   4/10     'NA'
+%                   1/10     'NC'
+%                   2/10     'NG'
+%                   3/10     'NT'
 %       D(2) returns the dinonucleotide distributions due to [1 1] of M
 %           distribution    model
 %                    3/9     'AA'
@@ -67,13 +67,13 @@ end
 clear FS;
 [sM1,sM2] = size(M);
 alphabet = 'ACGT'; l = length(alphabet);
-% compute contiguous n-mers distribution
+% compute contiguous k-mers distribution
 if isempty(find(sum(M,2)==size(M,2)))
-    D_nmer = mappingKspec(S,ones(1,sM2));
+    D_kmer = mappingKspec(S,ones(1,sM2));
 else
-    D_nmer = mappingKspec(S,ones(1,sM2),verbose);
+    D_kmer = mappingKspec(S,ones(1,sM2),verbose);
 end
-% compute gapped n-mers distribution
+% compute gapped k-mers distribution
 % D = [];
 for i = 1:sM1
     ms = sum(M(i,:));
@@ -81,14 +81,14 @@ for i = 1:sM1
         fprintf('model %u/%u : %s .. \n',i,sM1,mat2str(double(M(i,:))));
     end
     if ms == sM2 %the longest contiguous k-mer
-        D(i).distribution = D_nmer.distribution;
-        D(i).model = D_nmer.model;
+        D(i).distribution = D_kmer.distribution;
+        D(i).model = D_kmer.model;
         if verbose; fprintf(' done.\n'); end
         continue
     end        
     D(i).distribution = zeros(1,l^ms);
     for j = 1:l^ms
-        mdl = repmat('g',1,sM2);
+        mdl = repmat('N',1,sM2);
         lbase = [];
         for st = dec2base(j-1,l,ms)
             lbase = [lbase str2double(st)];
@@ -110,7 +110,7 @@ for i = 1:sM1
             binbase(~M(i,:)) = lgap;
             myindex = [myindex 1+4.^(sM2-1:-1:0)*(binbase)'];
         end
-        D(i).distribution(j) = sum(D_nmer.distribution(myindex));
+        D(i).distribution(j) = sum(D_kmer.distribution(myindex));
         %
         if verbose; fprintf(' done.\n'); end
     end

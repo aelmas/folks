@@ -7,7 +7,7 @@ function D = mappingKspec(S,M,verbose)
 %   S, a character string representing a DNA sequence, or is the path to 
 %     the fasta file containing a DNA sequence.
 %
-%   M, is a sequence of 1s representing a contiguous n-mer.
+%   M, is a sequence of 1s representing a contiguous k-mer.
 %   Example 
 %     [1 1 1]   represents all 3-mers ['AAA','AAC',...,'ACA','ACC',...,'TTT']
 %     [1 1]     represents all dimers
@@ -15,7 +15,7 @@ function D = mappingKspec(S,M,verbose)
 %   verbose, logical value for displaying the progress. default is false.
 %
 %   D, struct array. [model] Each row contains the corresponding sequence 
-%     features, e.g., n-mer distributions. [distribution] Contains the
+%     features, e.g., k-mer distributions. [distribution] Contains the
 %     corresponding distribution of the model.
 %
 %   Example
@@ -81,7 +81,7 @@ for i = 1:size(M,1)
     D(i).distribution = D(i).distribution/(lSnuc-sM2+1);
     %
     for j = 1:l^ms
-        mdl = repmat('g',1,sM2); 
+        mdl = repmat('N',1,sM2); 
         lbase = dec2base(j-1,l,ms);
         msites = []; 
         for m = lbase

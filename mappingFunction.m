@@ -8,15 +8,15 @@ function [F,models] = mappingFunction(T,M,D,verbose)
 %   T, a set of character strings representing DNA sequences, or is the 
 %     path to the fasta file containing DNA sequences.
 %
-%   M, a matrix where each row represents a gapped n-mer model.
+%   M, a matrix where each row represents a gapped k-mer model.
 %   Example
 %     [1 1 1] represents all 3-mers ['AAA','AAC',...,'ACA','ACC',...,'TTT']
 %     [1 0 1] represents the gapped 3-mers where the 2nd nucleotide
-%       is ignored ['AgA','AgC',...,'CgA','CgC',...,'TgT']
+%       is ignored ['ANA','ANC',...,'CNA','CNC',...,'TNT']
 %     Note: [1 0 1] have the same number of elements with 2-mers.
 %
 %   D, struct array. [model] Each row contains the corresponding sequence features, 
-%     e.g., (gapped) n-mer distributions. [distribution] Contains the
+%     e.g., (gapped) k-mer distributions. [distribution] Contains the
 %     corresponding distribution of the model.
 %
 %   verbose, logical value for displaying the progress. default is false.
@@ -24,12 +24,12 @@ function [F,models] = mappingFunction(T,M,D,verbose)
 %   F, enrichment vectors representing the relative enrichment of the given 
 %     sequence features in rows.
 %   
-%   models, all (gapped) n-mer features given in D.
+%   models, all (gapped) k-mer features given in D.
 % 
 %   Example
 %     S = 'GTGTCCAGTAGCAAGTTATAAATATCGGACTAGTAATCACTATTAGACA' %use long S
 %     M = [0 1; 1 1] 
-%     % M = binarySpace(n-1); M = [M true(size(M,1),1)]; %all gapped n-mers
+%     % M = binarySpace(n-1); M = [M true(size(M,1),1)]; %all gapped k-mers
 %     D = mappingFoldedKspec(S,M) %calculate background distributions
 %     T = {'GTGTCAGTAG','CAAGTTATAA','ATATGGACTA'}
 %     F = mappingFunction(T,M,D)

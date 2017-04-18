@@ -20,11 +20,11 @@ source_sites_def = 20;
 source_Evalue_def = 0;
 if ischar(motifA)
     if size(motifA,1)==1
-        if isempty(setdiff(upper(motifA),'ACGTg'))
+        if isempty(setdiff(upper(motifA),'ACGTN'))
             consensus = upper(motifA);
             motifA = zeros(4,length(consensus));
             for c = 1:length(consensus)
-                if isequal(consensus(c),'g')
+                if isequal(consensus(c),'N')
                     motifA(:,c) = 1/4;
                 else
                     motifA(:,c) = 'ACGT'==consensus(c);

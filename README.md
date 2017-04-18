@@ -19,4 +19,4 @@ Outputs:
 • ri final, the corresponding enrichment scores, ri
 
 
-(Please see the file "Readme.pdf" for more detail.)
+-- For more detail, please see Readme.pdf --

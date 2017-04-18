@@ -3,7 +3,7 @@
 %   variable names follow the same notations as in the paper
 % =========================================================================
 clear, clc
-r_cutoff = 0.005; k = 4;
+r_cutoff = 0.005; k = 6;
 % -------------------------------------------------------------------------
 % L. load sequence data 
 positive_sequences = fastaread('true_positive_set_Stringham13flanking.fasta');

@@ -3,20 +3,20 @@
 %   variable names follow the same notations as in the paper
 % =========================================================================
 clear, clc
-r_cutoff = 0.005; k = 4;
+r_cutoff = 0.005; k = 6;
 % -------------------------------------------------------------------------
 % L. load sequence data 
 positive_sequences = fastaread('true_positive_set_Stringham13flanking.fasta');
 % -------------------------------------------------------------------------
 % 0. generate positive training data (x_i^p)
 M = binarySpace(k-1); M = [M true(size(M,1),1)]; %all gapped k-mers
-    load dmel_genome_ucsc_2006_dm3
-    backgroundseq = []; 
-    for i = 10 %size(dmel_genome_ucsc_2006_dm3,1)
-        backgroundseq = [backgroundseq upper(dmel_genome_ucsc_2006_dm3(i).Sequence)]; 
-    end; clear dmel_genome_ucsc_2006_dm3
-    D = mappingFoldedKspec(backgroundseq,M); %generate background frequencies of gapped k-mers 
-% load D_dmel_genomeAll_gapped6mers %load background frequencies of gapped 6-mers in Drosophila Melanogaster genome
+%     load dmel_genome_ucsc_2006_dm3
+%     backgroundseq = []; 
+%     for i = 10 %size(dmel_genome_ucsc_2006_dm3,1)
+%         backgroundseq = [backgroundseq upper(dmel_genome_ucsc_2006_dm3(i).Sequence)]; 
+%     end; clear dmel_genome_ucsc_2006_dm3
+%     D = mappingFoldedKspec(backgroundseq,M); %generate background frequencies of gapped k-mers 
+load D_dmel_genomeAll_gapped6mers %load background frequencies of gapped 6-mers in Drosophila Melanogaster genome
 xip = mappingFunction(upper(positive_sequences),M,D);
 % -------------------------------------------------------------------------
 % 1. generate negative training data (x_j^n)

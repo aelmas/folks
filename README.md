@@ -18,13 +18,3 @@ Outputs:
 • features final, a set of enriched gapped k-mer features 
 
 • ri final, the corresponding enrichment scores, ri
-
-FEATURE ELIMINATION
-
-For the elimination phase (ri \ rjf ) we considered two options.
-
-Basic: eliminate any feature n with ri(n) > 0, if the corresponding rjf(n) > 0, j = i,...,i+9.
-
-Advanced (default): eliminate any feature n with ri(n) > 0, if it belongs to the "gapped model" of any z with rjf (z) > 0.
-
-In the Advanced option, before the elimination takes place, we run Tomtom for each false enrichment z and retain it if Tomtom finds significant similarity with a particular JASPAR motif (pval < 0.001), otherwise we set rjf(z) = 0, considering them as noise rather than background sequence patterns.

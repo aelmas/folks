@@ -71,7 +71,7 @@ for i = 1:n_models
 end 
 F = zeros(set_size,n_models_total);
 for t = 1:set_size
-    fprintf('Processing sequence %u/%u.. ',t,set_size);
+    fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\bProcessing sequence %u/%u.. ',t,set_size);
     D_t = mappingFoldedKspec(T{t},M,verbose);
     F_t = [];
     for i = 1:n_models

@@ -1,22 +1,22 @@
 % =========================================================================
-% SVM with Feature Elimination 
+% SVM with Feature Elimination (advanced)
 %   variable names follow the same notations as in the paper
 % =========================================================================
-clear
-r_cutoff = 0.005; k = 3;
+clear, clc
+r_cutoff = 0.005; k = 4;
 % -------------------------------------------------------------------------
 % L. load sequence data 
 positive_sequences = fastaread('true_positive_set_Stringham13flanking.fasta');
 % -------------------------------------------------------------------------
-% 0. generate training data (x_i^p)
-% load dmel_genome_ucsc_2006_dm3
-% backgroundseq = []; 
-% for i = 10 %size(dmel_genome_ucsc_2006_dm3,1)
-%     backgroundseq = [backgroundseq upper(dmel_genome_ucsc_2006_dm3(i).Sequence)]; 
-% end; clear dmel_genome_ucsc_2006_dm3
-% M = binarySpace(k-1); M = [M true(size(M,1),1)]; %all gapped k-mers
-% D = mappingFoldedKspec(backgroundseq,M); %generate background frequencies of gapped k-mers 
-load D_dmel_genomeAll_gapped6mers %load background frequencies of gapped 6-mers in Drosophila Melanogaster genome
+% 0. generate positive training data (x_i^p)
+M = binarySpace(k-1); M = [M true(size(M,1),1)]; %all gapped k-mers
+    load dmel_genome_ucsc_2006_dm3
+    backgroundseq = []; 
+    for i = 10 %size(dmel_genome_ucsc_2006_dm3,1)
+        backgroundseq = [backgroundseq upper(dmel_genome_ucsc_2006_dm3(i).Sequence)]; 
+    end; clear dmel_genome_ucsc_2006_dm3
+    D = mappingFoldedKspec(backgroundseq,M); %generate background frequencies of gapped k-mers 
+% load D_dmel_genomeAll_gapped6mers %load background frequencies of gapped 6-mers in Drosophila Melanogaster genome
 xip = mappingFunction(upper(positive_sequences),M,D);
 % -------------------------------------------------------------------------
 % 1. generate negative training data (x_j^n)
@@ -44,11 +44,11 @@ xjf = mappingFunction(upper(false_positive_sequences),M,D);
 % FEATURE ELIMINATION
 % =========================================================================
 % 3. train SVM with (-,+) data
-svm_settings = statset('MaxIter',200000);
+svm_settings = statset('MaxIter',3e5);
 svmStruct = svmtrain([xjn;xip],[repmat('-',size(xjn,1),1);repmat('+',size(xip,1),1)],...
     'kernel_function','linear','options',svm_settings);
 % -------------------------------------------------------------------------
-% % 3f. train SVM with (-,+f) data
+% 3f. train SVM with (-,+f) data
 svmStructf = svmtrain([xjn;xjf],[repmat('-',size(xjn,1),1);repmat('+',size(xjf,1),1)],...
     'kernel_function','linear','options',svm_settings);
 % -------------------------------------------------------------------------
@@ -151,9 +151,9 @@ end
 % -------------------------------------------------------------------------
 % 8. constrain the feature set to the union of remaining features
 feature_indices = union(feature_indices,feature_indices);
-% % =========================================================================
-% % FINAL PREDICTION
-% % =========================================================================
+% =========================================================================
+% FINAL PREDICTION
+% =========================================================================
 % 9. train SVM with (-,+) data
 svmStructh = svmtrain([xjn(:,feature_indices);xip(:,feature_indices)],[repmat('-',size(xjn,1),1);repmat('+',size(xip,1),1)],...
     'kernel_function','linear','options',svm_settings);

@@ -1,17 +1,23 @@
 % =========================================================================
-% SVM with FE
+% SVM with Feature Elimination (basic)
+%   variable names follow the same notations as in the paper
 % =========================================================================
-clear
-r_cutoff = 0.005;
+clear, clc
+r_cutoff = 0.005; k = 4;
 % -------------------------------------------------------------------------
 % L. load sequence data 
 positive_sequences = fastaread('true_positive_set_Stringham13flanking.fasta');
-% positive_sequences = fastaread('toydata.fasta');
 % -------------------------------------------------------------------------
-% 0. generate training data (x_i^p)
-% D = mappingFoldedKspec(backgroundseq,binarySpace(6)); %background frequencies of gapped k-mers 
-load D_dmel_genomeAll_gapped6mers %background frequencies of gapped k-mers in Dmel genome
-xip = mappingFunction(upper(positive_sequences),D);
+% 0. generate positive training data (x_i^p)
+M = binarySpace(k-1); M = [M true(size(M,1),1)]; %all gapped k-mers
+%     load dmel_genome_ucsc_2006_dm3
+%     backgroundseq = []; 
+%     for i = 10 %size(dmel_genome_ucsc_2006_dm3,1)
+%         backgroundseq = [backgroundseq upper(dmel_genome_ucsc_2006_dm3(i).Sequence)]; 
+%     end; clear dmel_genome_ucsc_2006_dm3
+%     D = mappingFoldedKspec(backgroundseq,M); %generate background frequencies of gapped k-mers 
+load D_dmel_genomeAll_gapped6mers %load background frequencies of gapped 6-mers in Drosophila Melanogaster genome
+xip = mappingFunction(upper(positive_sequences),M,D);
 % -------------------------------------------------------------------------
 % 1. generate negative training data (x_j^n)
 negative_sequences = {};
@@ -22,7 +28,7 @@ for i = 1:size(positive_sequences,1)
         negative_sequences = [negative_sequences; tmpseq( randperm(length(tmpseq)) ) ];
     end
 end
-[xjn,features] = mappingFunction(upper(negative_sequences),D); 
+[xjn,features] = mappingFunction(upper(negative_sequences),M,D); 
 % -------------------------------------------------------------------------
 % 2. generate false positive training data (x_j^f)
 false_positive_sequences = {};
@@ -33,12 +39,12 @@ for i = 1:size(positive_sequences,1)
         false_positive_sequences = [false_positive_sequences; tmpseq( randperm(length(tmpseq)) ) ];
     end
 end
-xjf = mappingFunction(upper(false_positive_sequences),D); 
+xjf = mappingFunction(upper(false_positive_sequences),M,D); 
 % =========================================================================
 % FEATURE ELIMINATION
 % =========================================================================
 % 3. train SVM with (-,+) data
-svm_settings = statset('MaxIter',200000);
+svm_settings = statset('MaxIter',3e5);
 svmStruct = svmtrain([xjn;xip],[repmat('-',size(xjn,1),1);repmat('+',size(xip,1),1)],...
     'kernel_function','linear','options',svm_settings);
 % -------------------------------------------------------------------------
@@ -91,7 +97,7 @@ feature_indices = union(feature_indices,feature_indices);
 svmStructh = svmtrain([xjn(:,feature_indices);xip(:,feature_indices)],[repmat('-',size(xjn,1),1);repmat('+',size(xip,1),1)],...
     'kernel_function','linear','options',svm_settings);
 % -------------------------------------------------------------------------
-% 10. calculate decision vector w for step 9
+% 10. calculate decision vector wh for step 9
 wh = zeros(1,length(svmStructh.SupportVectors(1,:)));
 for i = 1:length(svmStructh.SupportVectorIndices)
     group_sign = -1; %+1 first group (background), -1 second group (sequence)
@@ -103,14 +109,15 @@ ri_final = xip(:,feature_indices) .* repmat(wh,size(xip,1),1);
 % -------------------------------------------------------------------------
 % 12. filter out r_i_final <= r_cutoff
 ri_final(ri_final<=r_cutoff) = 0;
-% results 
+% -------------------------------------------------------------------------
+% RESULTS: features_final, ri_final
 features_final = {};
 for i = 1:size(ri_final,1)
-    features_final{i} = features(ri_final(i,:)>0)';
+    features_final{i} = features(ri_final(i,:)>r_cutoff)';
 end
 
 
-% WRITE ENRICHMENT TABLES
+%% WRITE ENRICHMENT TABLES
 pipelineSVMCVregular
 pipelineSVMCVfolded
 
@@ -134,10 +141,10 @@ end
 controlSize = size(negative_sequences,1);
 signalSize = size(positive_sequences,1);
 Group1_CRMs = setdiff(kmersFNidx,gappedkmersFNidx)-controlSize
-Group2_CRMs = intersect(kmersFNidx,gappedkmersFNidx)-controlSize %CRMs both-missed
+Group2_CRMs = intersect(kmersFNidx,gappedkmersFNidx)-controlSize
 Group3_CRMs = setdiff(gappedkmersFNidx,kmersFNidx)-controlSize
 Group4_CRMs = setdiff(1:signalSize,[Group1_CRMs Group2_CRMs Group3_CRMs]);
-CRM_indices = [Group1_CRMs Group2_CRMs Group3_CRMs Group4_CRMs]; %restCRMs
+CRM_indices = [Group1_CRMs Group2_CRMs Group3_CRMs Group4_CRMs];
 
 xS = 1;
 kmerfncount = zeros(1,length(CRM_indices));
@@ -160,7 +167,7 @@ gappedkmerfncount = gappedkmerfncount/xS;
 
     figure; bar([kmerfncount' gappedkmerfncount'])
     box off; axis([1 length(kmerfncount)+1 0 n_CVtests]); grid on;
-    xlabel('CRM ID'); ylabel('FN call rates');
+    xlabel('CRM ID'); ylabel('# FN-predicted tests');
     legend('6-spectrum kernel (FE)','Folded 6-spectrum kernel (FE)',...
         'Location','northoutside','Orientation','horizontal'); legend('boxoff')
     fig = gcf; 
@@ -168,22 +175,23 @@ gappedkmerfncount = gappedkmerfncount/xS;
     fig.PaperPosition = [0 0 8 2];
     fig.PaperPositionMode = 'manual';
     print(sprintf('tmp_plot_FNnumbers'),'-depsc','-tiff','-r300','-loose')
-
     
+full_feature_set = 1:size(features,2);    
 enriched_features = cell(1,length(CRM_indices));
 enriched_features_weights = cell(1,length(CRM_indices));
 enriched_gapped_kmers = cell(1,length(CRM_indices));
 maxFeaturesInCRM = 0;
 for c = 1:length(CRM_indices);
-    c
-    wfx = ri_final(CRM_indices(c),:);
+    wfx = ri(CRM_indices(c),:);
     [wfx_sorted,sidx] = sort(wfx,'descend');
-    feature_indices_sorted = feature_indices(sidx);
+    feature_indices_sorted = full_feature_set(sidx);
     %
-    idxFeaturesThresh_sorted = feature_indices_sorted(wfx_sorted>r_cutoff);
+    idxFeaturesThresh_sorted = feature_indices_sorted(wfx_sorted>r_cutoff);   
     %
+    idxFeaturesThresh_sorted = intersect(idxFeaturesThresh_sorted, features_i_h{CRM_indices(c)},'stable');
+    % ---------------------------------------------------------------
     enriched_features{c} = cell2mat(features(idxFeaturesThresh_sorted)');
-    enriched_features_weights{c} = wfx_sorted(wfx_sorted>r_cutoff)';
+    enriched_features_weights{c} = wfx(idxFeaturesThresh_sorted);
     % ---------------------------------------------------------------
     if length(enriched_features_weights{c}) > maxFeaturesInCRM
         maxFeaturesInCRM = length(enriched_features_weights{c});
@@ -207,3 +215,4 @@ end
 
 display('writing..');
 writeAllresults
+

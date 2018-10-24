@@ -1,5 +1,5 @@
 # folks
-The folded k-spectrum kernel: a machine learning approach to detecting transcription factor binding sites with gapped nucleotide dependencies
+The folded k-spectrum kernel: a machine learning approach to detecting transcription factor binding sites with gapped nucleotide dependencies [1]
 
 
 MAIN PROGRAM
@@ -20,3 +20,5 @@ Outputs:
 
 
 -- For more detail, please see Readme.pdf --
+
+[1] Elmas A, Wang X, Dresch JM (2017) The folded k-spectrum kernel: A machine learning approach to detecting transcription factor binding sites with gapped nucleotide dependencies. PLoS ONE 12(10): e0185570. https://doi.org/10.1371/journal.pone.0185570
